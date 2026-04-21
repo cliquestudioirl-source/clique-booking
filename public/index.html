@@ -489,6 +489,13 @@ header {
   border: 1px solid var(--border);
   border-radius: 6px;
   overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+#calendar-A, #calendar-B {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: auto;
 }
 .cal-slot {
   display: flex;
@@ -1537,7 +1544,7 @@ footer::before {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
           Facebook
         </a>
-        <a href="https://maps.app.goo.gl/oaU8pJWzWAAQ3re9A" target="_blank" rel="noopener" class="social-btn">
+        <a href="https://www.google.com/maps/place/Clique+Studios/@16.4017995,120.5943655,17z" target="_blank" rel="noopener" class="social-btn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           Google Maps
         </a>
@@ -1725,7 +1732,11 @@ async function renderCalendar(studio) {
   }
 
   h += '</div>';
+  // Save scroll position before re-render to prevent jump-to-top on mobile
+  const _scrollY = window.scrollY;
   el.innerHTML = h;
+  if (window.scrollY !== _scrollY) window.scrollTo(0, _scrollY);
+
   // Also render mobile view
   renderMobileView(studio, days, data);
 }
@@ -2071,15 +2082,21 @@ function closeModal() {
   state.modalStudio = null;
 }
 
-// Re-render mobile view on resize between mobile/desktop
+// Re-render only when WIDTH crosses the mobile/desktop breakpoint.
+// Mobile browsers fire resize on scroll (address bar hide/show) — we ignore those
+// by tracking the previous width and only acting when it actually changes.
+let _prevWidth = window.innerWidth;
 let _resizeTimer;
 window.addEventListener('resize', () => {
+  const newWidth = window.innerWidth;
+  if (newWidth === _prevWidth) return; // height-only change (mobile scroll) — ignore
+  _prevWidth = newWidth;
   clearTimeout(_resizeTimer);
   _resizeTimer = setTimeout(() => {
     ['A','B'].forEach(s => {
       if (state.slots[s]) renderCalendar(s);
     });
-  }, 200);
+  }, 300);
 });
 
 function handleModalOverlayClick(e) {
