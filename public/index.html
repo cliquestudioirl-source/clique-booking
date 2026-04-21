@@ -812,38 +812,6 @@ header {
 .channel-btn.active { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(236,184,64,0.3); }
 .chan-brand-text { line-height: 1; }
 
-/* Upload QR row */
-.upload-qr-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0 2px;
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
-}
-.upload-qr-label {
-  flex: 1;
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.2px;
-}
-.upload-qr-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--white);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: border-color 0.12s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.upload-qr-btn:hover { border-color: var(--gold); color: var(--gold); }
 
 .channel-btn img {
   height: 22px;
@@ -2028,14 +1996,6 @@ function openModal(s) {
           <span class="chan-brand-text" style="color:#003087;font-size:14px;font-weight:900;letter-spacing:1px;">BDO</span>
         </button>
       </div>
-      <div class="upload-qr-row">
-        <span class="upload-qr-label">Or upload your own QR screenshot</span>
-        <label class="upload-qr-btn" for="uploadQrInput">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-          Upload QR
-        </label>
-        <input type="file" id="uploadQrInput" accept="image/*" style="display:none" onchange="previewUploadedQr(event)"/>
-      </div>
     </div>
 
     <div class="dp-note">
@@ -2293,24 +2253,6 @@ function closeQrOverlay() {
   document.body.style.overflow = '';
 }
 
-function previewUploadedQr(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const src = e.target.result;
-    // Show the QR overlay with the uploaded image
-    document.getElementById('qrOverlayImg').src = src;
-    document.getElementById('qrOverlayName').textContent = 'Your QR Screenshot';
-    document.getElementById('qrOverlayNote').textContent = 'Confirm your payment details match.';
-    const dlBtn = document.getElementById('qrDownloadBtn');
-    dlBtn.href = src;
-    dlBtn.download = 'my-payment-QR.png';
-    document.getElementById('qrOverlay').classList.add('visible');
-    document.body.style.overflow = 'hidden';
-  };
-  reader.readAsDataURL(file);
-}
 
 function handleQrOverlayClick(e) {
   if (e.target === document.getElementById('qrOverlay')) closeQrOverlay();
