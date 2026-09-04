@@ -112,11 +112,14 @@ header{
 .hero h1{
   font-family:var(--f-display);font-weight:800;text-transform:uppercase;
   font-size:clamp(46px,11.5vw,124px);line-height:.85;letter-spacing:-.045em;
+  word-spacing:.1em;
   margin-bottom:20px;
 }
-/* outlined word — spray-stencil feel */
+/* Solid, not outlined. -webkit-text-stroke traces every contour of
+   Overused Grotesk, including the internal seams where the glyph's
+   overlapping pieces meet, which shows as doubled stems on B/K/A. */
 .hero h1 .out{
-  color:transparent;-webkit-text-stroke:1.6px var(--white);
+  color:var(--white);
   padding-right:.06em;
 }
 .hero h1 .hit{
