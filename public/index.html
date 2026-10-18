@@ -302,6 +302,9 @@ header{
 /* month grid — concrete tiles */
 .m-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
 .m-dow span{text-align:center;font-family:var(--f-mono);font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);padding:4px 0}
+.m-dow span.shut{color:var(--line-2);text-decoration:line-through}
+.m-cell.shut{position:relative}
+.m-cell.shut::after{content:'';position:absolute;left:22%;right:22%;top:50%;height:1px;background:currentColor;opacity:.45}
 .m-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .m-cell{
   position:relative;aspect-ratio:1/.9;border:1px solid var(--line);background:var(--concrete);
@@ -666,13 +669,14 @@ footer{border-top:1px solid var(--line);background:var(--concrete)}
           <button class="m-btn" id="mNext" onclick="stepMonth(1)" aria-label="Next month">&#8594;</button>
           <button class="m-today" onclick="jumpEarliest()">Earliest</button>
         </div>
-        <div class="m-dow"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+        <div class="m-dow"><span>Sun</span><span class="shut">Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
         <div class="m-grid" id="mGrid"></div>
         <div class="lead-note">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           <p>
             <b>The next 2 days are closed online.</b> We need the lead time to check payments and get the floor ready, so the calendar starts <b id="leadFrom">2 days out</b>.
             Anything sooner than that, including same day, we handle by message.
+            <b>We are closed Mondays</b>, so those dates are never available online.
             <a href="#urgent">Message us instead &rarr;</a>
           </p>
         </div>
@@ -773,6 +777,7 @@ const BOOKING_TOKEN = 'clique-2026-baguio';
 const HOURS_START = 8, HOURS_END = 24;   // 8:00 AM – 12:00 MN
 const LEAD_DAYS   = 2;                   // online booking opens 2 days ahead
 const MAX_MONTHS  = 6;                   // how far forward the picker goes
+const CLOSED_DOW  = [1];                 // studio is closed Mondays (0=Sun … 6=Sat)
 const MAX_DUR     = 8;                   // hours
 const CACHE_MS    = 90 * 1000;
 
@@ -823,8 +828,12 @@ function maxDate(){
   d.setMonth(d.getMonth() + MAX_MONTHS);
   return d;
 }
+function closedDay(dateStr){
+  return CLOSED_DOW.indexOf(parse(dateStr).getDay()) !== -1;
+}
 function bookable(dateStr){
   const d = parse(dateStr);
+  if (closedDay(dateStr)) return false;
   return d >= minDate() && d <= maxDate();
 }
 function fmtHour(h){
@@ -944,14 +953,15 @@ async function render(){
   for (let d = 1; d <= total; d++){
     const ds = cur.getFullYear()+'-'+pad(cur.getMonth()+1)+'-'+pad(d);
     const ok = bookable(ds);
-    let cls = 'm-cell' + (ok ? '' : ' off') + (ds === todayStr ? ' today' : '') + (ds === state.date[s] ? ' sel' : '');
+    let cls = 'm-cell' + (ok ? '' : ' off') + (closedDay(ds) ? ' shut' : '') + (ds === todayStr ? ' today' : '') + (ds === state.date[s] ? ' sel' : '');
     let dots = '';
     if (ok && !data.error){
       const n = openCount(ds, data);
       if (n === 0){ cls += ' full'; dots = '<i></i>'; }
       else dots = '<i></i>'.repeat(n >= 10 ? 3 : n >= 5 ? 2 : 1);
     }
-    g += '<button class="'+cls+'"'+(ok ? ' onclick="pickDate(\''+ds+'\')"' : ' disabled')+'>'
+    const tip = closedDay(ds) ? ' title="Closed Mondays" aria-label="'+d+', closed"' : '';
+    g += '<button class="'+cls+'"'+tip+(ok ? ' onclick="pickDate(\''+ds+'\')"' : ' disabled')+'>'
        + d + '<span class="m-avail">'+dots+'</span></button>';
   }
   $('mGrid').innerHTML = g;
@@ -1255,6 +1265,7 @@ async function submitBooking(){
   if (!pax || isNaN(pax) || pax < 1)             return fail('Please enter the number of people.', 'fPax');
   if (pax > CAPS[s])                             return fail('Studio '+s+' can only fit '+CAPS[s]+' people.', 'fPax');
   if (!file)                                     return fail('Please upload your proof of payment.');
+  if (closedDay(ds))                             return fail('We are closed on Mondays. Please pick another day.');
   if (!bookable(ds))                             return fail('That date is no longer bookable online. Please message us for urgent bookings.');
   ok();
 
